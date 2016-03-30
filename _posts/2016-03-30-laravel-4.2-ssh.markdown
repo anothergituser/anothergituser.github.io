@@ -1,0 +1,36 @@
+---
+layout: post
+title:  "Laravel 4.2 ssh issue"
+date:   2016-03-30 13:14:11 +0200
+categories: laravel php
+---
+
+Laravel 4.2 requires phpseclib 0.3.* package for it's ssh facade, and it works fine with older versions of openssh server like 5.3 in centos 6.5, but with newer ones like version 6.9 in fedora 22 it will fail to connect with an error like so
+
+{% highlight php %}
+unpack(): Type N: not enough input, need 4, have 1
+{% endhighlight %}
+
+Solution
+[https://github.com/phpseclib/phpseclib/blame/1.0.1/phpseclib/Net/SSH2.php]
+line 3122. 
+
+{% highlight php %}
+
+// $this->_string_shift($payload, 1);
+extract(unpack('Nlength', $this->_string_shift($payload, 4)));
+
+{% endhighlight %}
+
+Works with old and newer versions of openssh server.
+
+I also tried upgrading the phpseclib to a newer version, like 1.0.1
+by using composer aliases like
+`"phpseclib/phpseclib": "1.0.1 as 0.3.10"` in composer.json and that installs ok
+and runs, but i was logging the command output and it stopped after a while (the command
+    finished but the output was cut), maybe some timeout is involved.. 
+
+
+[https://github.com/phpseclib/phpseclib/blame/1.0.1/phpseclib/Net/SSH2.php]: https://github.com/phpseclib/phpseclib/blame/1.0.1/phpseclib/Net/SSH2.php
+
+
